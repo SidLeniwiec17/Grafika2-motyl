@@ -191,6 +191,34 @@ void Butterfly::InitializePentagon()
 void Butterfly::InitializeDodecahedron()
 //Compute dodecahedronMtx and mirrorMtx
 {
+	//dolna
+	m_dodecahedronMtx[0] = XMMatrixRotationX(XM_PI / 2) * XMMatrixTranslation(0.0f, -DODECAHEDRON_H / 2.0f, 0.0f);
+	//dolne boczne
+	for (int i = 0; i < 5; i++)
+	{
+		XMMATRIX tmpMtx = XMMatrixRotationX(-XM_PI / 2) * XMMatrixTranslation(DODECAHEDRON_R, 0.0f, 0.0f) *
+			XMMatrixRotationZ(DODECAHEDRON_A) * XMMatrixTranslation(-DODECAHEDRON_R, -DODECAHEDRON_H / 2.0f, 0.0f);
+		for (int j = 0; j < i; j++)
+		{
+			tmpMtx = tmpMtx * XMMatrixRotationY( 2 * XM_PI / 5);
+		}
+		m_dodecahedronMtx[i + 1] = tmpMtx;
+	}
+
+	//gorne to dolne obrocone o PI po osi Z
+
+	m_dodecahedronMtx[6] = XMMatrixRotationX(XM_PI / 2) * XMMatrixTranslation(0.0f, -DODECAHEDRON_H / 2.0f, 0.0f) * XMMatrixRotationZ(XM_PI);
+	//dolne boczne
+	for (int i = 0; i < 5; i++)
+	{
+		XMMATRIX tmpMtx = XMMatrixRotationX(-XM_PI / 2) * XMMatrixTranslation(DODECAHEDRON_R, 0.0f, 0.0f) *
+			XMMatrixRotationZ(DODECAHEDRON_A) * XMMatrixTranslation(-DODECAHEDRON_R, -DODECAHEDRON_H / 2.0f, 0.0f);
+		for (int j = 0; j < i; j++)
+		{
+			tmpMtx = tmpMtx * XMMatrixRotationY(2 * XM_PI / 5);
+		}
+		m_dodecahedronMtx[i + 7] = tmpMtx * XMMatrixRotationZ(XM_PI);
+	}
 	//TODO: write code here
 }
 
@@ -398,18 +426,18 @@ void Butterfly::DrawBox()
 void Butterfly::DrawDodecahedron(bool colors)
 //Draw dodecahedron. If color is true, use render faces with coresponding colors. Otherwise render using white color
 {
+	
+	//tutaj wyciagamy poszczegolna sciane z m_dodecahedronMtx i rysujemy.
+	for (int i = 0; i < 12; i++)
+	{
+		const XMMATRIX worldMtx = m_dodecahedronMtx[i];
+		m_context->UpdateSubresource(m_cbWorld.get(), 0, 0, &worldMtx, 0, 0);
 
-	const XMMATRIX rotationMtx = XMMatrixRotationX(XM_PI / 2);
-	const XMMATRIX translationMtx = XMMatrixTranslation(0.0f, -DODECAHEDRON_H / 2.0f, 0.0f);
-
-	const XMMATRIX worldMtx = rotationMtx * translationMtx;
-	m_context->UpdateSubresource(m_cbWorld.get(), 0, 0, &worldMtx, 0, 0);
-
-	ID3D11Buffer* b = m_vbPentagon.get();
-	m_context->IASetVertexBuffers(0, 1, &b, &VB_STRIDE, &VB_OFFSET);
-	m_context->IASetIndexBuffer(m_ibPentagon.get(), DXGI_FORMAT_R16_UINT, 0);
-	m_context->DrawIndexed(9, 0, 0);
-
+		ID3D11Buffer* b = m_vbPentagon.get();
+		m_context->IASetVertexBuffers(0, 1, &b, &VB_STRIDE, &VB_OFFSET);
+		m_context->IASetIndexBuffer(m_ibPentagon.get(), DXGI_FORMAT_R16_UINT, 0);
+		m_context->DrawIndexed(9, 0, 0);
+	}
 
 
 

@@ -225,13 +225,30 @@ void Butterfly::InitializeDodecahedron()
 XMFLOAT3 Butterfly::MoebiusStripPos(float t, float s)
 //Compute the position of point on the Moebius strip for parameters t and s
 {
-	return XMFLOAT3(0.0f, 0.0f, 0.0f); //TODO: replace with correct version
+	XMFLOAT3 pos = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	float posX = cos(t) * (MOEBIUS_R + MOEBIUS_W * s * cos(0.5 * t));
+	float posY = sin(t) * (MOEBIUS_R + MOEBIUS_W * s * cos(0.5 * t));
+	float posZ = MOEBIUS_W * s * sin(0.5 * t);
+	pos.x = posX;
+	pos.y = posY;
+	pos.z = posZ;
+	
+
+	return pos;
+	//TODO: replace with correct version
 }
 
 XMVECTOR Butterfly::MoebiusStripDt(float t, float s)
 //Compute the t-derivative of point on the Moebius strip for parameters t and s
 {
 	XMFLOAT3 dt(1.0f, 0.0f, 0.0f); //TODO: replace with correct version
+	float posX = - MOEBIUS_R * sin(t) - (0.5 * s) * MOEBIUS_W * sin(0.5 * t) * cos(t) - MOEBIUS_W * s * cos(0.5 * t ) * sin(t);
+	float posY = MOEBIUS_R * cos(t) - (0.5 * s ) * MOEBIUS_W * sin(0.5 * t ) * sin(t) + MOEBIUS_W * s * cos(0.5 * t) * cos(t);
+	float posZ = (0.5* s) * MOEBIUS_W * cos(t);
+	dt.x = posX;
+	dt.y = posY;
+	dt.z = posZ;
+
 	return XMLoadFloat3(&dt);
 }
 
@@ -239,12 +256,20 @@ XMVECTOR Butterfly::MoebiusStripDs(float t, float s)
 // Return the s-derivative of point on the Moebius strip for parameters t and s
 {
 	XMFLOAT3 dt(1.0f, 0.0f, 0.0f); //TODO: replace with correct version
+	float posX = cos(0.5 * t ) * cos(t);
+	float posY = cos(0.5 * t) * sin(t);
+	float posZ = sin(0.5 * t);
+	dt.x = posX;
+	dt.y = posY;
+	dt.z = posZ;
+
 	return XMLoadFloat3(&dt);
 }
 
 void Butterfly::InitializeMoebiusStrip()
 //Create vertex and index buffers for the Moebius strip
 {
+	
 	VertexPosNormal vertices[MOEBIUS_N];
 	//float a = 0, da = XM_2PI / 5.0f;
 	/*for (int i = 0; i < 5; ++i, a -= da)
@@ -254,6 +279,20 @@ void Butterfly::InitializeMoebiusStrip()
 		vertices[i].Pos = XMFLOAT3(cosa, sina, 0.0f);
 		vertices[i].Normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 	}*/
+
+	for (int i = 0; i < 64; i++)
+	{
+		float t = ((i + 1) / 64) * (4 * XM_PI);
+		float s1 = -1.0f;
+		float s2 = 1.0f;
+		VertexPosNormal vertice1, vertice2;
+		vertice1.Pos = MoebiusStripPos(t, s1);
+		XMVECTOR normalny1 = MoebiusStripDt(t, s1) * MoebiusStripDs(t, s1);
+		vertice2.Pos = MoebiusStripPos(t, s2);
+		XMVECTOR normalny2 = MoebiusStripDt(t, s2) * MoebiusStripDs(t, s2);
+		
+	}
+	
 	m_vbMoebius = m_device.CreateVertexBuffer(vertices, MOEBIUS_N);
 	unsigned short indices[((MOEBIUS_N / 4) * 6) - 2];
 	int counter = 0;
@@ -272,9 +311,9 @@ void Butterfly::InitializeMoebiusStrip()
 		counter++;
 		indices[counter] = i+3;
 		counter++;
-	}
-	
+	}	
 	m_ibMoebius = m_device.CreateIndexBuffer(indices, ((MOEBIUS_N / 4) * 6) - 2);
+	
 	//TODO: write code here
 }
 

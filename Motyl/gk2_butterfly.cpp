@@ -245,6 +245,36 @@ XMVECTOR Butterfly::MoebiusStripDs(float t, float s)
 void Butterfly::InitializeMoebiusStrip()
 //Create vertex and index buffers for the Moebius strip
 {
+	VertexPosNormal vertices[MOEBIUS_N];
+	//float a = 0, da = XM_2PI / 5.0f;
+	/*for (int i = 0; i < 5; ++i, a -= da)
+	{
+		float sina, cosa;
+		XMScalarSinCos(&sina, &cosa, a);
+		vertices[i].Pos = XMFLOAT3(cosa, sina, 0.0f);
+		vertices[i].Normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	}*/
+	m_vbMoebius = m_device.CreateVertexBuffer(vertices, MOEBIUS_N);
+	unsigned short indices[((MOEBIUS_N / 4) * 6) - 2];
+	int counter = 0;
+	for (int i = 0; i < ((MOEBIUS_N / 4) * 6); i += 2)
+	{
+		indices[counter] = i;
+		counter++;
+		indices[counter] = i+3;
+		counter++;
+		indices[counter] = i+1;
+		counter++;
+
+		indices[counter] = i;
+		counter++;
+		indices[counter] = i+2;
+		counter++;
+		indices[counter] = i+3;
+		counter++;
+	}
+	
+	m_ibMoebius = m_device.CreateIndexBuffer(indices, ((MOEBIUS_N / 4) * 6) - 2);
 	//TODO: write code here
 }
 

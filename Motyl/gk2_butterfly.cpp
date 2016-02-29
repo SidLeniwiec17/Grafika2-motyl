@@ -271,32 +271,32 @@ void Butterfly::InitializeMoebiusStrip()
 {
 	
 	VertexPosNormal vertices[MOEBIUS_N];
-	//float a = 0, da = XM_2PI / 5.0f;
-	/*for (int i = 0; i < 5; ++i, a -= da)
-	{
-		float sina, cosa;
-		XMScalarSinCos(&sina, &cosa, a);
-		vertices[i].Pos = XMFLOAT3(cosa, sina, 0.0f);
-		vertices[i].Normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
-	}*/
 
-	for (int i = 0; i < 64; i++)
+	int counter = 0;
+	for (int i = 0; i < MOEBIUS_N / 2; i++)
 	{
-		float t = ((i + 1) / 64) * (4 * XM_PI);
+		float t = ((i + 1.0f) / (MOEBIUS_N / 2.0f)) * (8 * XM_PI);
 		float s1 = -1.0f;
 		float s2 = 1.0f;
-		VertexPosNormal vertice1, vertice2;
+		VertexPosNormal vertice1;
+		VertexPosNormal vertice2;
 		vertice1.Pos = MoebiusStripPos(t, s1);
 		XMVECTOR normalny1 = MoebiusStripDt(t, s1) * MoebiusStripDs(t, s1);
+		XMStoreFloat3(&vertice1.Normal, normalny1);
 		vertice2.Pos = MoebiusStripPos(t, s2);
 		XMVECTOR normalny2 = MoebiusStripDt(t, s2) * MoebiusStripDs(t, s2);
+		XMStoreFloat3(&vertice2.Normal, normalny2);
 		
+		vertices[counter] = vertice1;
+		counter++;
+		vertices[counter] = vertice2;
+		counter++;
 	}
 	
 	m_vbMoebius = m_device.CreateVertexBuffer(vertices, MOEBIUS_N);
-	unsigned short indices[((MOEBIUS_N / 4) * 6) - 2];
-	int counter = 0;
-	for (int i = 0; i < ((MOEBIUS_N / 4) * 6); i += 2)
+	unsigned short indices[(MOEBIUS_N * 6) ];
+	counter = 0;
+	for (int i = 0; i < MOEBIUS_N /2 ; i += 2)
 	{
 		indices[counter] = i;
 		counter++;
@@ -312,7 +312,8 @@ void Butterfly::InitializeMoebiusStrip()
 		indices[counter] = i+3;
 		counter++;
 	}	
-	m_ibMoebius = m_device.CreateIndexBuffer(indices, ((MOEBIUS_N / 4) * 6) - 2);
+
+	m_ibMoebius = m_device.CreateIndexBuffer(indices, (MOEBIUS_N * 6) );
 	
 	//TODO: write code here
 }
@@ -351,7 +352,7 @@ bool Butterfly::LoadContent()
 	InitializeConstantBuffers();
 	InitializeRenderStates();
 	InitializeCamera();
-	InitializeBox();
+//	InitializeBox();
 	InitializePentagon();
 	InitializeDodecahedron();
 	InitializeMoebiusStrip();
@@ -516,6 +517,14 @@ void Butterfly::DrawDodecahedron(bool colors)
 void Butterfly::DrawMoebiusStrip()
 //Draw the Moebius strip
 {
+	const XMMATRIX worldMtx = XMMatrixIdentity();
+	m_context->UpdateSubresource(m_cbWorld.get(), 0, 0, &worldMtx, 0, 0);
+
+	ID3D11Buffer* b = m_vbMoebius.get();
+	m_context->IASetVertexBuffers(0, 1, &b, &VB_STRIDE, &VB_OFFSET);
+	m_context->IASetIndexBuffer(m_ibMoebius.get(), DXGI_FORMAT_R16_UINT, 0);
+	m_context->DrawIndexed(MOEBIUS_N * 6, 0, 0);
+	
 	//TODO: write code here
 }
 

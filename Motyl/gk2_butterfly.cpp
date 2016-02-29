@@ -270,12 +270,12 @@ void Butterfly::InitializeMoebiusStrip()
 //Create vertex and index buffers for the Moebius strip
 {
 	
-	VertexPosNormal vertices[MOEBIUS_N];
+	VertexPosNormal vertices[MOEBIUS_N * 2];
 
 	int counter = 0;
-	for (int i = 0; i < MOEBIUS_N / 2; i++)
+	for (int i = 0; i < MOEBIUS_N; i++)
 	{
-		float t = ((i + 1.0f) / (MOEBIUS_N / 2.0f)) * (8 * XM_PI);
+		float t = ((i + 1.0f) / (MOEBIUS_N / 2.0f)) * (4 * XM_PI);
 		float s1 = -1.0f;
 		float s2 = 1.0f;
 		VertexPosNormal vertice1;
@@ -293,10 +293,10 @@ void Butterfly::InitializeMoebiusStrip()
 		counter++;
 	}
 	
-	m_vbMoebius = m_device.CreateVertexBuffer(vertices, MOEBIUS_N);
-	unsigned short indices[(MOEBIUS_N * 6) ];
+	m_vbMoebius = m_device.CreateVertexBuffer(vertices, MOEBIUS_N * 2);
+	unsigned short indices[(MOEBIUS_N * 12) ];
 	counter = 0;
-	for (int i = 0; i < MOEBIUS_N /2 ; i += 2)
+	for (int i = 0; i < MOEBIUS_N ; i += 2)
 	{
 		indices[counter] = i;
 		counter++;
@@ -313,7 +313,7 @@ void Butterfly::InitializeMoebiusStrip()
 		counter++;
 	}	
 
-	m_ibMoebius = m_device.CreateIndexBuffer(indices, (MOEBIUS_N * 6) );
+	m_ibMoebius = m_device.CreateIndexBuffer(indices, (MOEBIUS_N * 12) );
 	
 	//TODO: write code here
 }
@@ -523,7 +523,7 @@ void Butterfly::DrawMoebiusStrip()
 	ID3D11Buffer* b = m_vbMoebius.get();
 	m_context->IASetVertexBuffers(0, 1, &b, &VB_STRIDE, &VB_OFFSET);
 	m_context->IASetIndexBuffer(m_ibMoebius.get(), DXGI_FORMAT_R16_UINT, 0);
-	m_context->DrawIndexed(MOEBIUS_N * 6, 0, 0);
+	m_context->DrawIndexed(MOEBIUS_N * 12, 0, 0);
 	
 	//TODO: write code here
 }

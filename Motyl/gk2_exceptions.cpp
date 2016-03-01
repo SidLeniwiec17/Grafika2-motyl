@@ -16,7 +16,7 @@ wstring WinAPIException::getMessage() const
 	{
 		LPWSTR lpMsgBuf;
 		if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL, m_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR) &lpMsgBuf, 0, NULL))
+			nullptr, m_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPWSTR>(&lpMsgBuf), 0, nullptr))
 		{
 			message = lpMsgBuf;
 			LocalFree(lpMsgBuf);
@@ -26,22 +26,4 @@ wstring WinAPIException::getMessage() const
 	catch(...)
 	{	}
 	return message;
-}
-
-Dx11Exception::Dx11Exception(const wchar_t* location, HRESULT result)
-	: Exception(location), m_result(result)
-{
-
-}
-
-wstring Dx11Exception::getMessage() const
-{
-	try
-	{
-		return wstring(DXGetErrorDescriptionW(m_result)) + L"\nLocation: " + getErrorLocation();
-	}
-	catch (...)
-	{
-		return wstring();
-	}
 }

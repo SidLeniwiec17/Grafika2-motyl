@@ -1,8 +1,7 @@
 #ifndef __GK2_CAMERA_H_
 #define __GK2_CAMERA_H_
 
-#include <d3d11.h>
-#include <xnamath.h>
+#include <DirectXMath.h>
 
 namespace gk2
 {
@@ -14,9 +13,9 @@ namespace gk2
 		void SetRange(float minDistance, float maxDistance);
 		void Zoom(float d);
 		void Rotate(float dx, float dy);
-		XMMATRIX GetViewMatrix();
-		void GetViewMatrix(XMMATRIX& viewMatrix);
-		XMFLOAT4 GetPosition();
+		DirectX::XMMATRIX GetViewMatrix() const;
+		void GetViewMatrix(DirectX::XMMATRIX& viewMatrix) const;
+		DirectX::XMFLOAT4 GetPosition() const;
 
 	private:
 		float m_angleX;

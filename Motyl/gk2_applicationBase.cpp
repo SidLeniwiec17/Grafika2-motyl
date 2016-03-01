@@ -5,8 +5,8 @@ using namespace std;
 using namespace gk2;
 
 ApplicationBase::ApplicationBase(HINSTANCE hInstance)
-	: m_hInstance(hInstance), m_mainWindow(0), m_featureLevel(D3D_FEATURE_LEVEL_11_0),
-	  m_driverType(D3D_DRIVER_TYPE_NULL)
+	: m_driverType(D3D_DRIVER_TYPE_NULL), m_featureLevel(D3D_FEATURE_LEVEL_11_0),
+	  m_hInstance(hInstance)
 {
 
 }
@@ -26,7 +26,7 @@ void ApplicationBase::UnloadContent()
 
 }
 
-void ApplicationBase::FillSwapChainDesc(DXGI_SWAP_CHAIN_DESC& desc, int width, int height)
+void ApplicationBase::FillSwapChainDesc(DXGI_SWAP_CHAIN_DESC& desc, int width, int height) const
 {
 	ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC));
 	desc.BufferCount = 1;
@@ -45,26 +45,26 @@ void ApplicationBase::FillSwapChainDesc(DXGI_SWAP_CHAIN_DESC& desc, int width, i
 void ApplicationBase::CreateDeviceAndSwapChain(SIZE windowSize)
 {
 	D3D_DRIVER_TYPE driverTypes[] = { D3D_DRIVER_TYPE_HARDWARE, D3D_DRIVER_TYPE_WARP, D3D_DRIVER_TYPE_SOFTWARE };
-	unsigned int driverTypesCount = ARRAYSIZE(driverTypes);
+	UINT driverTypesCount = ARRAYSIZE(driverTypes);
 	D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1, D3D_FEATURE_LEVEL_10_0 };
-	unsigned int featureLevelsCout = ARRAYSIZE(featureLevels);
+	UINT featureLevelsCout = ARRAYSIZE(featureLevels);
 	DXGI_SWAP_CHAIN_DESC desc;
 	FillSwapChainDesc(desc, windowSize.cx, windowSize.cy);
 	unsigned int creationFlags = 0;
 #ifdef _DEBUG
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-	HRESULT result = S_OK;
+	HRESULT result;
 	for (unsigned int driver = 0; driver < driverTypesCount; ++driver)
 	{
 		ID3D11Device* device = nullptr;
 		ID3D11DeviceContext* context = nullptr;
 		IDXGISwapChain* swapChain = nullptr;
-		result = D3D11CreateDeviceAndSwapChain(0, driverTypes[driver], 0, creationFlags, featureLevels,
+		result = D3D11CreateDeviceAndSwapChain(nullptr, driverTypes[driver], nullptr, creationFlags, featureLevels,
 			featureLevelsCout, D3D11_SDK_VERSION, &desc, &swapChain, &device, &m_featureLevel, &context);
 		m_device.m_deviceObject.reset(device, Utils::COMRelease);
-		m_swapChain.reset(swapChain, Utils::COMRelease);
-		m_context.reset(context, Utils::COMRelease);
+		m_swapChain = unique_ptr_del<IDXGISwapChain>(swapChain, Utils::COMRelease);
+		m_context = unique_ptr_del<ID3D11DeviceContext>(context, Utils::COMRelease);
 		if (SUCCEEDED(result))
 		{
 			m_driverType = driverTypes[driver];
@@ -77,8 +77,8 @@ void ApplicationBase::CreateDeviceAndSwapChain(SIZE windowSize)
 void ApplicationBase::CreateBackBuffers(SIZE windowSize)
 {
 	ID3D11Texture2D* bbt;
-	HRESULT result = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&bbt);
-	shared_ptr<ID3D11Texture2D> backBufferTexture(bbt, Utils::COMRelease);
+	HRESULT result = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&bbt));
+	unique_ptr_del<ID3D11Texture2D> backBufferTexture(bbt, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	m_backBuffer = m_device.CreateRenderTargetView(backBufferTexture);
@@ -89,7 +89,7 @@ void ApplicationBase::CreateBackBuffers(SIZE windowSize)
 	m_context->OMSetRenderTargets(1, &backBuffer, m_depthStencilView.get());
 }
 
-void ApplicationBase::SetViewPort(SIZE windowSize)
+void ApplicationBase::SetViewPort(SIZE windowSize) const
 {
 	D3D11_VIEWPORT viewport;
 	viewport.Width = static_cast<float>(windowSize.cx);
@@ -106,18 +106,16 @@ void ApplicationBase::InitializeDirectInput()
 	IDirectInput8W* di;
 	HRESULT resutl = DirectInput8Create(getHandle(), DIRECTINPUT_VERSION, IID_IDirectInput8W,
 		reinterpret_cast<void**>(&di), nullptr);
-	m_input.m_inputObject.reset(di, Utils::COMRelease);
+	m_input.m_inputObject = unique_ptr_del<IDirectInput8W>(di, Utils::COMRelease);
 	if (FAILED(resutl))
 		THROW_DX11(resutl);
-	shared_ptr<IDirectInputDevice8W> device = m_input.CreateInputDevice(m_mainWindow->getHandle(), GUID_SysKeyboard, c_dfDIKeyboard);
-	m_keyboard.reset(new Keyboard(device));
-	device = m_input.CreateInputDevice(m_mainWindow->getHandle(), GUID_SysMouse, c_dfDIMouse);
-	m_mouse.reset(new Mouse(device));
+	m_keyboard.reset(new Keyboard(m_input.CreateInputDevice(m_mainWindow->getHandle(), GUID_SysKeyboard, c_dfDIKeyboard)));
+	m_mouse.reset(new Mouse(m_input.CreateInputDevice(m_mainWindow->getHandle(), GUID_SysMouse, c_dfDIMouse)));
 }
 
 bool ApplicationBase::Initialize()
 {
-	SIZE windowSize = getMainWindow()->getClientSize();
+	auto windowSize = getMainWindow()->getClientSize();
 	CreateDeviceAndSwapChain(windowSize);
 	CreateBackBuffers(windowSize);
 	SetViewPort(windowSize);
@@ -128,22 +126,21 @@ bool ApplicationBase::Initialize()
 
 int ApplicationBase::MainLoop()
 {
-	MSG msg = { 0 };
-    float t = 0.0f;
+	MSG msg = { nullptr };
 	DWORD dwTimeStart = 0;
 	while (msg.message != WM_QUIT)
 	{
-		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 		else
 		{
-			DWORD dwTimeCur = GetTickCount();
+			auto dwTimeCur = GetTickCount();
 			if( dwTimeStart == 0 )
 				dwTimeStart = dwTimeCur;
-			t = ( dwTimeCur - dwTimeStart ) / 1000.0f;
+			auto t = ( dwTimeCur - dwTimeStart ) / 1000.0f;
 			dwTimeStart = dwTimeCur;
 			Update(t);
 			Render();
@@ -167,9 +164,9 @@ void ApplicationBase::Shutdown()
 	m_input.m_inputObject.reset();
 }
 
-int ApplicationBase::Run(Window* w, int cmdShow)
+int ApplicationBase::Run(unique_ptr<Window>&& w, int cmdShow)
 {
-	m_mainWindow = w;
+	m_mainWindow = move(w);
 	if (!Initialize())
 		return -1;
 	m_mainWindow->Show(cmdShow);

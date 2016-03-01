@@ -18,9 +18,9 @@ void Window::RegisterWindowClass(HINSTANCE hInstance)
 	c.style = CS_HREDRAW | CS_VREDRAW;
 	c.lpfnWndProc = WndProc;
 	c.hInstance = hInstance;
-	c.hCursor = LoadCursor(NULL, IDC_ARROW);
-	c.hbrBackground = (HBRUSH) (COLOR_WINDOW + 1);
-	c.lpszMenuName = NULL;
+	c.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	c.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+	c.lpszMenuName = nullptr;
 	c.lpszClassName = m_windowClassName.c_str();
 	c.cbWndExtra = sizeof(LONG_PTR);
 	if (!RegisterClassExW(&c))
@@ -66,12 +66,11 @@ Window::~Window()
 LRESULT Window::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT paintStruct;
-	HDC hDC;
 
 	switch (msg)
 	{
 	case WM_PAINT:
-		hDC = BeginPaint(m_hWnd, &paintStruct);
+		BeginPaint(m_hWnd, &paintStruct);
 		EndPaint(m_hWnd, &paintStruct);
 		break;
 	case WM_DESTROY:
@@ -100,15 +99,15 @@ LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 {
 	if (msg == WM_CREATE)
 	{
-		LPCREATESTRUCT pcs = (LPCREATESTRUCT)lParam;
-		Window* wnd = (Window*)pcs->lpCreateParams;
+		auto pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+		auto wnd = static_cast<Window*>(pcs->lpCreateParams);
 		SetWindowLongPtrW(hWnd, GWLP_USERDATA, PtrToUlong(wnd));
 		wnd->m_hWnd = hWnd;
 		return wnd->WndProc(msg, wParam, lParam);
 	}
 	else
 	{
-		Window *wnd = reinterpret_cast<Window*>(static_cast<LONG_PTR>(GetWindowLongPtrW(hWnd, GWLP_USERDATA)));
+		auto wnd = reinterpret_cast<Window*>(static_cast<LONG_PTR>(GetWindowLongPtrW(hWnd, GWLP_USERDATA)));
 		return wnd ? wnd->WndProc(msg, wParam, lParam) : DefWindowProc(hWnd, msg, wParam, lParam);
 	}
 }

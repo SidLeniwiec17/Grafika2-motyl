@@ -115,12 +115,24 @@ void Butterfly::InitializeRenderStates()
 {
 	D3D11_DEPTH_STENCIL_DESC dssDesc = m_device.DefaultDepthStencilDesc();
 	//Setup depth stencil state for writing
+
+	dssDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	dssDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+	dssDesc.StencilEnable = true;
+	dssDesc.BackFace.StencilFunc = D3D11_COMPARISON_NEVER;
+	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+
 	m_dssWrite = m_device.CreateDepthStencilState(dssDesc);
+	
+	dssDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dssDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
+	dssDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	
 	//Setup depth stencil state for testing
 	m_dssTest = m_device.CreateDepthStencilState(dssDesc);
-
 	D3D11_RASTERIZER_DESC rsDesc = m_device.DefaultRasterizerDesc();
 	//Set rasterizer state front face to ccw
+	rsDesc.FrontCounterClockwise = true;
 	m_rsCounterClockwise = m_device.CreateRasterizerState(rsDesc);
 
 	D3D11_BLEND_DESC bsDesc = m_device.DefaultBlendDesc();
@@ -522,9 +534,37 @@ void Butterfly::DrawMirroredWorld(int i)
 //Draw the mirrored scene reflected in the i-th dodecahedron face
 {
 	//Setup render state for writing to the stencil buffer
+	m_context->OMSetDepthStencilState(m_dssWrite.get(), i + 1);
+	//
 
+	auto b = m_vbPentagon.get();
+	m_context->IASetVertexBuffers(0, 1, &b, &VB_STRIDE, &VB_OFFSET);
+	m_context->IASetIndexBuffer(m_ibPentagon.get(), DXGI_FORMAT_R16_UINT, 0);
+	m_context->UpdateSubresource(m_cbWorld.get(), 0, nullptr, &m_dodecahedronMtx[i], 0, 0);
+	m_context->DrawIndexed(9, 0, 0);
+	
+
+
+	XMVECTOR det;
+	m_mirrorMtx[i] = XMMatrixInverse(&det, m_dodecahedronMtx[i]) * XMMatrixScaling(1.0f, 1.0f, -1.0f) * m_dodecahedronMtx[i];
+
+	XMMATRIX oldviewMatrix = m_camera.GetViewMatrix();
+	XMMATRIX viewMatrix = m_mirrorMtx[i] * m_camera.GetViewMatrix();
+
+	UpdateCamera(viewMatrix);
+	m_context->OMSetDepthStencilState(m_dssTest.get(), i + 1);
+	m_context->RSSetState(m_rsCounterClockwise.get());
+
+	DrawBox();
+	DrawDodecahedron(true);
+	DrawMoebiusStrip();
+	DrawBilboards();
+
+	UpdateCamera(oldviewMatrix);
+	m_context->RSSetState(nullptr);
+	m_context->OMSetDepthStencilState(nullptr, 0);
 	//Draw the i-th face
-
+	
 	//Setup render state and view matrix for rendering the mirrored world
 
 	//Draw objects
@@ -544,20 +584,21 @@ void Butterfly::Render()
 	//Render box with all three lights
 	SetLight1();
 	SetSurfaceColor(XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
-	//DrawBox();
+	
 
 	//render mirrored worlds
-	for (int i = 0; i < 12; ++i)
+	for (int i = 0; i < 1; ++i)
 		DrawMirroredWorld(i);
 
 	//render dodecahedron with one light and alpha blending
 	m_context->OMSetBlendState(m_bsAlpha.get(), nullptr, BS_MASK);
 	SetLight0();
-	DrawDodecahedron(true);
+	//DrawDodecahedron(true);
 	m_context->OMSetBlendState(nullptr, nullptr, BS_MASK);
 
 	//render the rest of the scene with all lights
 	SetLight1();
+	DrawBox();
 	DrawMoebiusStrip();
 	DrawButterfly();
 	DrawBilboards();

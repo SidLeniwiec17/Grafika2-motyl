@@ -1,7 +1,6 @@
 #ifndef __GK2_INPUT_H_
 #define __GK2_INPUT_H_
 
-#include <dinput.h>
 #include <cassert>
 #include <memory>
 #include "gk2_utils.h"
@@ -9,11 +8,11 @@
 
 namespace gk2
 {
+
 	class ApplicationBase;
 
 	struct KeyboardState
 	{
-	public:
 		static const unsigned int STATE_TAB_LENGTH = 256;
 		static const BYTE KEY_MASK = 0x80;
 
@@ -35,12 +34,12 @@ namespace gk2
 			return *this;
 		}
 
-		inline bool isKeyDown(BYTE keyCode) const
+		bool isKeyDown(BYTE keyCode) const
 		{
 			return 0 != (m_keys[keyCode] & KEY_MASK);
 		}
 
-		inline bool isKeyUp(BYTE keyCode) const
+		bool isKeyUp(BYTE keyCode) const
 		{
 			return 0 == (m_keys[keyCode] & KEY_MASK);
 		}
@@ -53,8 +52,6 @@ namespace gk2
 
 	struct MouseState
 	{
-	public:
-
 		enum Buttons
 		{
 			Left = 0,
@@ -90,24 +87,24 @@ namespace gk2
 			return r;
 		}
 
-		inline LONG getWheelPositionChange() const
+		LONG getWheelPositionChange() const
 		{
 			return m_state.lZ;
 		}
 
-		inline bool isButtonDown(BYTE button) const
+		bool isButtonDown(BYTE button) const
 		{
 			assert(button < 4);
 			return 0 != (m_state.rgbButtons[button] & BUTTON_MASK);
 		}
 
-		inline bool isButtonUp(BYTE button) const
+		bool isButtonUp(BYTE button) const
 		{
 			assert(button < 4);
 			return 0 == (m_state.rgbButtons[button] & BUTTON_MASK);
 		}
 
-		bool operator[](BYTE button)
+		bool operator[](BYTE button) const
 		{
 			assert(button < 4);
 			return 0 != (m_state.rgbButtons[button] & BUTTON_MASK);
@@ -122,22 +119,22 @@ namespace gk2
 		static const unsigned int AQUIRE_RETRIES = 2;
 
 	protected:
-		DeviceBase(std::shared_ptr<IDirectInputDevice8W> device)
-			: m_device(device)
+		explicit DeviceBase(unique_ptr_del<IDirectInputDevice8W>&& device)
+			: m_device(move(device))
 		{ }
 
-		bool GetState(unsigned int size, void* ptr)
+		bool GetState(unsigned int size, void* ptr) const
 		{
 			if (!m_device)
 				return false;
-			for (int i = 0; i < GET_STATE_RETRIES; ++i)
+			for (auto i = 0; i < GET_STATE_RETRIES; ++i)
 			{
-				HRESULT result = m_device->GetDeviceState(size, ptr);
+				auto result = m_device->GetDeviceState(size, ptr);
 				if (SUCCEEDED(result))
 					return true;
 				if (result != DIERR_INPUTLOST && result != DIERR_NOTACQUIRED)
 					THROW_DX11(result);
-				for (int j = 0; j < AQUIRE_RETRIES; ++j)
+				for (auto j = 0; j < AQUIRE_RETRIES; ++j)
 				{
 					result = m_device->Acquire();
 					if (SUCCEEDED(result))
@@ -149,42 +146,42 @@ namespace gk2
 			return false;
 		}
 
-		std::shared_ptr<IDirectInputDevice8W> m_device;
+		unique_ptr_del<IDirectInputDevice8W> m_device;
 	};
 
-	class Keyboard : public gk2::DeviceBase<gk2::KeyboardState>
+	class Keyboard : public DeviceBase<KeyboardState>
 	{
 	public:
-		bool GetState(gk2::KeyboardState& state);
+		bool GetState(KeyboardState& state) const;
 
-		friend class gk2::ApplicationBase;
+		friend class ApplicationBase;
 		
 	private:
-		Keyboard(std::shared_ptr<IDirectInputDevice8W> device)
-			: DeviceBase(device)
+		explicit Keyboard(unique_ptr_del<IDirectInputDevice8W>&& device)
+			: DeviceBase(move(device))
 		{ }
 	};
 
-	class Mouse : public gk2::DeviceBase<gk2::MouseState>
+	class Mouse : public DeviceBase<MouseState>
 	{
 	public:
-		bool GetState(gk2::MouseState& state);
+		bool GetState(MouseState& state) const;
 
-		friend class gk2::ApplicationBase;
+		friend class ApplicationBase;
 
 	private:
-		Mouse(std::shared_ptr<IDirectInputDevice8W> device)
-			: DeviceBase(device)
+		explicit Mouse(unique_ptr_del<IDirectInputDevice8W> device)
+			: DeviceBase(move(device))
 		{ }
 	};
 
 	class InputHelper
 	{
 	public:
-		std::shared_ptr<IDirectInput8W> m_inputObject;
+		unique_ptr_del<IDirectInput8W> m_inputObject;
 
-		std::shared_ptr<IDirectInputDevice8W> CreateInputDevice(HWND hWnd, const GUID& deviceGuid,
-																const DIDATAFORMAT& dataFormat);
+		unique_ptr_del<IDirectInputDevice8W> CreateInputDevice(HWND hWnd, const GUID& deviceGuid,
+																const DIDATAFORMAT& dataFormat) const;
 	};
 }
 

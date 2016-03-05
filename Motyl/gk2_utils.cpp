@@ -19,19 +19,20 @@ void Utils::DI8DeviceRelease(IDirectInputDevice8W* device)
 
 void* Utils::New16Aligned(size_t size)
 {
-	BYTE* ptr = new BYTE[size + 16];
-	BYTE* shifted = ptr + 16;
-	BYTE missalignment = (BYTE)((ULONG)shifted & 0xf);
-	shifted = (BYTE*)((ULONG)shifted &~(ULONG)0xf);
+	// ReSharper disable once CppNonReclaimedResourceAcquisition
+	auto ptr = new BYTE[size + 16];
+	auto shifted = ptr + 16;
+	auto missalignment = static_cast<BYTE>(reinterpret_cast<intptr_t>(shifted) & 0xf);
+	shifted = reinterpret_cast<BYTE*>(reinterpret_cast<intptr_t>(shifted) &~static_cast<intptr_t>(0xf));
 	shifted[-1] = missalignment;
-	return (void*)shifted;
+	return static_cast<void*>(shifted);
 }
 
 void Utils::Delete16Aligned(void* ptr)
 {
-	BYTE* shifted = (BYTE*)ptr;
-	BYTE missalignment = shifted[-1];
-	shifted = (BYTE*)((ULONG)shifted | (ULONG)missalignment);
-	BYTE* original = shifted - 16;
+	auto shifted = static_cast<BYTE*>(ptr);
+	auto missalignment = shifted[-1];
+	shifted = reinterpret_cast<BYTE*>(reinterpret_cast<intptr_t>(shifted) | static_cast<intptr_t>(missalignment));
+	auto original = shifted - 16;
 	delete [] original;
 }

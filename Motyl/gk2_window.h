@@ -29,7 +29,8 @@ namespace gk2
 		static int m_defaultWindowWidth;
 		static int m_defaultWindowHeight;
 
-		Window(const gk2::Window& other) { /* Do not use!*/ }
+		// ReSharper disable once CppPossiblyUninitializedMember
+		Window(const Window& other) { /* Do not use!*/ }
 
 		void CreateWindowHandle(int width, int height, const std::wstring& title);
 

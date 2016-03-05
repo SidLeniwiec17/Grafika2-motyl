@@ -5,78 +5,77 @@
 using namespace std;
 using namespace gk2;
 
+//
+//unique_ptr_del<ID3DBlob> DeviceHelper::CompileD3DShader(const wstring& filePath, const string& entry, const string& shaderModel)
+//{
+//	DWORD shaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
+//#if defined( DEBUG ) || defined( _DEBUG )
+//	shaderFlags |= D3DCOMPILE_DEBUG;
+//#endif
+//	ID3DBlob* eb = nullptr, *b = nullptr;
+//	HRESULT result = D3DCompileFromFile(filePath.c_str(), 0, 0, entry.c_str(), shaderModel.c_str(), shaderFlags, 0, &b, &eb);
+//	unique_ptr_del<ID3DBlob> errorBuffer(eb, Utils::COMRelease);
+//	unique_ptr_del<ID3DBlob> buffer(b, Utils::COMRelease);
+//	if (FAILED(result))
+//	{
+//		if (errorBuffer)
+//		{
+//			char* msg = reinterpret_cast<char*>(errorBuffer->GetBufferPointer());
+//			OutputDebugStringA(msg);
+//		}
+//		THROW_DX11(result);
+//	}
+//	return buffer;
+//}
 
-shared_ptr<ID3DBlob> DeviceHelper::CompileD3DShader(const wstring& filePath, const string& entry, const string& shaderModel)
-{
-	DWORD shaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
-#if defined( DEBUG ) || defined( _DEBUG )
-	shaderFlags |= D3DCOMPILE_DEBUG;
-#endif
-	ID3DBlob* eb = nullptr, *b = nullptr;
-	HRESULT result = D3DX11CompileFromFileW(filePath.c_str(), 0, 0, entry.c_str(), shaderModel.c_str(), shaderFlags,
-		0, 0, &b, &eb, 0);
-	shared_ptr<ID3DBlob> errorBuffer(eb, Utils::COMRelease);
-	shared_ptr<ID3DBlob> buffer(b, Utils::COMRelease);
-	if (FAILED(result))
-	{
-		if (errorBuffer)
-		{
-			char* msg = reinterpret_cast<char*>(errorBuffer->GetBufferPointer());
-			OutputDebugStringA(msg);
-		}
-		THROW_DX11(result);
-	}
-	return buffer;
-}
-
-shared_ptr<ID3D11VertexShader> DeviceHelper::CreateVertexShader(shared_ptr<ID3DBlob> byteCode)
+unique_ptr_del<ID3D11VertexShader> DeviceHelper::CreateVertexShader(const void *byteCode, size_t byteCodeLength) const
 {
 	ID3D11VertexShader* vs;
-	HRESULT result = m_deviceObject->CreateVertexShader(byteCode->GetBufferPointer(), byteCode->GetBufferSize(), 0, &vs);
-	shared_ptr<ID3D11VertexShader> vertexShader(vs, Utils::COMRelease);
+	HRESULT result = m_deviceObject->CreateVertexShader(byteCode, byteCodeLength, nullptr, &vs);
+	unique_ptr_del<ID3D11VertexShader> vertexShader(vs, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return vertexShader;
 }
 
-shared_ptr<ID3D11PixelShader> DeviceHelper::CreatePixelShader(shared_ptr<ID3DBlob> byteCode)
+unique_ptr_del<ID3D11PixelShader> DeviceHelper::CreatePixelShader(const void* byteCode, size_t byteCodeLength) const
 {
 	ID3D11PixelShader* ps;
-	HRESULT result = m_deviceObject->CreatePixelShader(byteCode->GetBufferPointer(), byteCode->GetBufferSize(), 0, &ps);
-	shared_ptr<ID3D11PixelShader> pixelShader(ps, Utils::COMRelease);
+	HRESULT result = m_deviceObject->CreatePixelShader(byteCode, byteCodeLength, nullptr, &ps);
+	unique_ptr_del<ID3D11PixelShader> pixelShader(ps, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return pixelShader;
 }
 
-shared_ptr<ID3D11InputLayout> DeviceHelper::CreateInputLayout(const D3D11_INPUT_ELEMENT_DESC* layout,
+unique_ptr_del<ID3D11InputLayout> DeviceHelper::CreateInputLayout(const D3D11_INPUT_ELEMENT_DESC* layout,
 	unsigned int layoutElements,
-	shared_ptr<ID3DBlob> vsByteCode)
+	const void* vsByteCode,
+	size_t vsByteCodeLength) const
 {
 	ID3D11InputLayout* il;
-	HRESULT result = m_deviceObject->CreateInputLayout(layout, layoutElements, vsByteCode->GetBufferPointer(),
-		vsByteCode->GetBufferSize(), &il);
-	shared_ptr<ID3D11InputLayout> inputLayout(il, Utils::COMRelease);
+	HRESULT result = m_deviceObject->CreateInputLayout(layout, layoutElements, vsByteCode, vsByteCodeLength, &il);
+	unique_ptr_del<ID3D11InputLayout> inputLayout(il, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return inputLayout;
 }
 
-shared_ptr<ID3D11Buffer> DeviceHelper::CreateBuffer(const D3D11_BUFFER_DESC& desc, const void* pData)
+unique_ptr_del<ID3D11Buffer> DeviceHelper::CreateBuffer(const D3D11_BUFFER_DESC& desc, const void* pData) const
 {
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
 	data.pSysMem = pData;
 	ID3D11Buffer* b;
 	HRESULT result = m_deviceObject->CreateBuffer(&desc, pData?&data:nullptr, &b);
-	shared_ptr<ID3D11Buffer> buffer(b, Utils::COMRelease);
+	unique_ptr_del<ID3D11Buffer> buffer(b, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return buffer;
 }
 
-shared_ptr<ID3D11Buffer> DeviceHelper::_CreateBufferInternal(const void* pData, unsigned int byteWidth,
-	D3D11_BIND_FLAG bindFlags)
+unique_ptr_del<ID3D11Buffer> DeviceHelper::_CreateBufferInternal(const void* pData, unsigned int byteWidth,
+	D3D11_BIND_FLAG bindFlags) const
 {
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
@@ -85,18 +84,18 @@ shared_ptr<ID3D11Buffer> DeviceHelper::_CreateBufferInternal(const void* pData, 
 	desc.ByteWidth = byteWidth;
 	return CreateBuffer(desc, pData);
 }
+//
+//unique_ptr_del<ID3D11ShaderResourceView> DeviceHelper::CreateShaderResourceView(const wstring& fileName)
+//{
+//	ID3D11ShaderResourceView* rv;
+//	HRESULT result = D3DX11CreateShaderResourceViewFromFileW(m_deviceObject.get(), fileName.c_str(), 0, 0, &rv, 0);
+//	unique_ptr_del<ID3D11ShaderResourceView> resourceView(rv, Utils::COMRelease);
+//	if (FAILED(result))
+//		THROW_DX11(result);
+//	return resourceView;
+//}
 
-shared_ptr<ID3D11ShaderResourceView> DeviceHelper::CreateShaderResourceView(const wstring& fileName)
-{
-	ID3D11ShaderResourceView* rv;
-	HRESULT result = D3DX11CreateShaderResourceViewFromFileW(m_deviceObject.get(), fileName.c_str(), 0, 0, &rv, 0);
-	shared_ptr<ID3D11ShaderResourceView> resourceView(rv, Utils::COMRelease);
-	if (FAILED(result))
-		THROW_DX11(result);
-	return resourceView;
-}
-
-shared_ptr<ID3D11SamplerState> DeviceHelper::CreateSamplerState()
+unique_ptr_del<ID3D11SamplerState> DeviceHelper::CreateSamplerState() const
 {
 	D3D11_SAMPLER_DESC colorMapDesc;
 	ZeroMemory( &colorMapDesc, sizeof( colorMapDesc ) );
@@ -108,13 +107,13 @@ shared_ptr<ID3D11SamplerState> DeviceHelper::CreateSamplerState()
 	colorMapDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	ID3D11SamplerState* s;
 	HRESULT result = m_deviceObject->CreateSamplerState(&colorMapDesc, &s);
-	shared_ptr<ID3D11SamplerState> sampler(s, Utils::COMRelease);
+	unique_ptr_del<ID3D11SamplerState> sampler(s, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return sampler;
 }
 
-shared_ptr<ID3D11Texture2D> DeviceHelper::CreateDepthStencilTexture(SIZE size)
+unique_ptr_del<ID3D11Texture2D> DeviceHelper::CreateDepthStencilTexture(SIZE size) const
 {
 	D3D11_TEXTURE2D_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -131,23 +130,23 @@ shared_ptr<ID3D11Texture2D> DeviceHelper::CreateDepthStencilTexture(SIZE size)
 	desc.MiscFlags = 0;
 	ID3D11Texture2D* dst;
 	HRESULT result = m_deviceObject->CreateTexture2D(&desc, nullptr, &dst);
-	shared_ptr<ID3D11Texture2D> depthStencilTexture(dst, Utils::COMRelease);
+	unique_ptr_del<ID3D11Texture2D> depthStencilTexture(dst, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return depthStencilTexture;
 }
 
-shared_ptr<ID3D11RenderTargetView> DeviceHelper::CreateRenderTargetView(shared_ptr<ID3D11Texture2D> backBufferTexture)
+unique_ptr_del<ID3D11RenderTargetView> DeviceHelper::CreateRenderTargetView(const unique_ptr_del<ID3D11Texture2D>& backBufferTexture) const
 {
 	ID3D11RenderTargetView* bb;
-	HRESULT result = m_deviceObject->CreateRenderTargetView(backBufferTexture.get(), 0, &bb);
-	shared_ptr<ID3D11RenderTargetView> backBuffer(bb, Utils::COMRelease);
+	HRESULT result = m_deviceObject->CreateRenderTargetView(backBufferTexture.get(), nullptr, &bb);
+	unique_ptr_del<ID3D11RenderTargetView> backBuffer(bb, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return backBuffer;
 }
 
-shared_ptr<ID3D11DepthStencilView> DeviceHelper::CreateDepthStencilView(shared_ptr<ID3D11Texture2D> depthStencilTexture)
+unique_ptr_del<ID3D11DepthStencilView> DeviceHelper::CreateDepthStencilView(const unique_ptr_del<ID3D11Texture2D>& depthStencilTexture) const
 {
 	D3D11_DEPTH_STENCIL_VIEW_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
@@ -156,7 +155,7 @@ shared_ptr<ID3D11DepthStencilView> DeviceHelper::CreateDepthStencilView(shared_p
 	desc.Texture2D.MipSlice = 0;
 	ID3D11DepthStencilView* dsv;
 	HRESULT result = m_deviceObject->CreateDepthStencilView(depthStencilTexture.get(), &desc, &dsv);
-	shared_ptr<ID3D11DepthStencilView> depthStencilView(dsv, Utils::COMRelease);
+	unique_ptr_del<ID3D11DepthStencilView> depthStencilView(dsv, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return depthStencilView;
@@ -195,11 +194,11 @@ D3D11_DEPTH_STENCIL_DESC DeviceHelper::DefaultDepthStencilDesc()
 	return desc;
 }
 
-shared_ptr<ID3D11DepthStencilState> DeviceHelper::CreateDepthStencilState(D3D11_DEPTH_STENCIL_DESC& desc)
+unique_ptr_del<ID3D11DepthStencilState> DeviceHelper::CreateDepthStencilState(D3D11_DEPTH_STENCIL_DESC& desc) const
 {
 	ID3D11DepthStencilState* s;
 	HRESULT result = m_deviceObject->CreateDepthStencilState(&desc, &s);
-	shared_ptr<ID3D11DepthStencilState> state(s, Utils::COMRelease);
+	unique_ptr_del<ID3D11DepthStencilState> state(s, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return state;
@@ -221,11 +220,11 @@ D3D11_RASTERIZER_DESC DeviceHelper::DefaultRasterizerDesc()
 	return desc;
 }
 
-shared_ptr<ID3D11RasterizerState> DeviceHelper::CreateRasterizerState(D3D11_RASTERIZER_DESC& desc)
+unique_ptr_del<ID3D11RasterizerState> DeviceHelper::CreateRasterizerState(D3D11_RASTERIZER_DESC& desc) const
 {
 	ID3D11RasterizerState* s;
 	HRESULT result = m_deviceObject->CreateRasterizerState(&desc, &s);
-	shared_ptr<ID3D11RasterizerState> state(s, Utils::COMRelease);
+	unique_ptr_del<ID3D11RasterizerState> state(s, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return state;
@@ -245,11 +244,11 @@ D3D11_BLEND_DESC DeviceHelper::DefaultBlendDesc()
 	return desc;
 }
 
-shared_ptr<ID3D11BlendState> DeviceHelper::CreateBlendState(D3D11_BLEND_DESC& desc)
+unique_ptr_del<ID3D11BlendState> DeviceHelper::CreateBlendState(D3D11_BLEND_DESC& desc) const
 {
 	ID3D11BlendState* s;
 	HRESULT result = m_deviceObject->CreateBlendState(&desc, &s);
-	shared_ptr<ID3D11BlendState> state(s, Utils::COMRelease);
+	unique_ptr_del<ID3D11BlendState> state(s, Utils::COMRelease);
 	if (FAILED(result))
 		THROW_DX11(result);
 	return state;

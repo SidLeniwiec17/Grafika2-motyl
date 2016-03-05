@@ -7,7 +7,7 @@
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
@@ -15,16 +15,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="gk2_input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="gk2_window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <FxCompile Include="bilbps.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="bilbvs.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="ps.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="vs.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="gk2_applicationBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gk2_butterfly.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gk2_camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gk2_deviceHelper.cpp">
@@ -33,7 +44,7 @@
     <ClCompile Include="gk2_exceptions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gk2_butterfly.cpp">
+    <ClCompile Include="gk2_input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gk2_utils.cpp">
@@ -42,7 +53,10 @@
     <ClCompile Include="gk2_vertices.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gk2_camera.cpp">
+    <ClCompile Include="gk2_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,7 +64,16 @@
     <ClInclude Include="gk2_applicationBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gk2_window.h">
+    <ClInclude Include="gk2_butterfly.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gk2_camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gk2_deviceHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gk2_exceptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gk2_input.h">
@@ -59,25 +82,19 @@
     <ClInclude Include="gk2_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gk2_exceptions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gk2_deviceHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gk2_butterfly.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="gk2_vertices.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gk2_camera.h">
+    <ClInclude Include="gk2_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\shaders\Butterfly.hlsl">
+    <ResourceCompile Include="shaders.rc">
       <Filter>Resource Files</Filter>
-    </None>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

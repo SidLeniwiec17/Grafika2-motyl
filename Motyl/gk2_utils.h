@@ -1,8 +1,12 @@
 #ifndef __GK2_UTILS_H_
 #define __GK2_UTILS_H_
-
+#ifndef DIRECTINPUT_VERSION
+#define DIRECTINPUT_VERSION 0x0800
+#endif
 #include <d3d11.h>
 #include <dinput.h>
+#include <memory>
+#include <functional>
 
 namespace gk2
 {
@@ -24,6 +28,9 @@ namespace gk2
 		static void* New16Aligned(size_t size);
 		static void Delete16Aligned(void* ptr);
 	};
+
+	template<class T>
+	using unique_ptr_del = std::unique_ptr<T, std::function<void(T*)>>;
 }
 
 #endif __GK2_UTILS_H_

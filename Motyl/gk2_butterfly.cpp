@@ -496,7 +496,7 @@ void Butterfly::DrawDodecahedron(bool colors) const
 	m_context->IASetIndexBuffer(m_ibPentagon.get(), DXGI_FORMAT_R16_UINT, 0);
 	for (auto i = 0; i < 12; ++i)
 	{
-		
+		SetSurfaceColor(COLORS[i]);
 		m_context->UpdateSubresource(m_cbWorld.get(), 0, nullptr, &m_dodecahedronMtx[i], 0, 0);
 		m_context->DrawIndexed(9, 0, 0);
 	}
@@ -555,7 +555,7 @@ void Butterfly::DrawMirroredWorld(int i)
 	m_context->OMSetDepthStencilState(m_dssTest.get(), i + 1);
 	m_context->RSSetState(m_rsCounterClockwise.get());
 
-	DrawBox();
+	//DrawBox();
 	DrawDodecahedron(true);
 	DrawMoebiusStrip();
 	DrawBilboards();
@@ -587,7 +587,7 @@ void Butterfly::Render()
 	
 
 	//render mirrored worlds
-	for (int i = 0; i < 1; ++i)
+	for (int i = 0; i < 12; ++i)
 		DrawMirroredWorld(i);
 
 	//render dodecahedron with one light and alpha blending
@@ -598,7 +598,7 @@ void Butterfly::Render()
 
 	//render the rest of the scene with all lights
 	SetLight1();
-	DrawBox();
+	//DrawBox();
 	DrawMoebiusStrip();
 	DrawButterfly();
 	DrawBilboards();

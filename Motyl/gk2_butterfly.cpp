@@ -310,6 +310,36 @@ void Butterfly::InitializeMoebiusStrip()
 void Butterfly::InitializeButterfly()
 //Create vertex and index buffers for the butterfly wing
 {
+	VertexPosNormal vertices[8];
+	
+	vertices[0].Pos = XMFLOAT3(-1.0f, 1.0f, 0.0f);
+	vertices[1].Pos = XMFLOAT3(1.0f, 1.0f, 0.0f);
+	vertices[2].Pos = XMFLOAT3(-1.0f, -1.0f, 0.0f);
+	vertices[3].Pos = XMFLOAT3(1.0f, -1.0f, 0.0f);
+	vertices[4].Pos = XMFLOAT3(-1.0f, 1.0f, 0.0f);
+	vertices[5].Pos = XMFLOAT3(1.0f, 1.0f, 0.0f);
+	vertices[6].Pos = XMFLOAT3(-1.0f, -1.0f, 0.0f);
+	vertices[7].Pos = XMFLOAT3(1.0f, -1.0f, 0.0f);
+	
+	vertices[0].Normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[1].Normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[2].Normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[3].Normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	vertices[4].Normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[5].Normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[6].Normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	vertices[7].Normal = XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+
+	
+
+
+	m_vbWing = m_device.CreateVertexBuffer(vertices, 8);
+	unsigned short indices[] =
+	{
+		0,1,2,2,1,3,4,7,5,4,6,7
+	};
+	m_ibWing = m_device.CreateIndexBuffer(indices, 12);
 	//TODO: write code here
 }
 
@@ -420,6 +450,29 @@ void Butterfly::UpdateButterfly(float dtime)
 	t *= XM_2PI;
 	if (a > WING_MAX_A)
 		a = 2 * WING_MAX_A - a;
+	
+	
+	/*XMMATRIX B = { 
+		XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f),
+		XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f),
+		XMFLOAT4(0.0f, 0.0f, 1.0f, 0.0f),
+		XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f)
+	};*/
+
+	XMMATRIX B = XMMatrixIdentity();
+
+	XMMATRIX buttMtrx1 =	XMMatrixRotationX(a) *
+		XMMatrixTranslation(0, 1, 0) *
+		XMMatrixScaling(WING_W / 2.0f, WING_H / 2.0f, 1.0f) * B;
+
+	XMMATRIX buttMtrx2 = XMMatrixRotationX(-a) *
+		XMMatrixTranslation(0, 1, 0) *
+		XMMatrixScaling(WING_W / 2.0f, WING_H / 2.0f, 1.0f) * B;
+
+	m_wingMtx[0] = buttMtrx1;
+	m_wingMtx[1] = buttMtrx2;
+
+	//kazde wymnozyc przez macierz B !!
 
 	//TODO: write the rest of code here
 }
@@ -533,6 +586,16 @@ void Butterfly::DrawMoebiusStrip() const
 void Butterfly::DrawButterfly() const
 //Draw the butterfly
 {
+
+	auto b = m_vbWing.get();
+	m_context->IASetVertexBuffers(0, 1, &b, &VB_STRIDE, &VB_OFFSET);
+	m_context->IASetIndexBuffer(m_ibWing.get(), DXGI_FORMAT_R16_UINT, 0);
+	for (auto i = 0; i < 1; ++i)
+	{
+		m_context->UpdateSubresource(m_cbWorld.get(), 0, nullptr, &m_wingMtx[i], 0, 0);
+		m_context->DrawIndexed(6, 0, 0);
+	}
+
 	//TODO: write code here
 }
 

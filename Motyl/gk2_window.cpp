@@ -101,7 +101,8 @@ LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 	{
 		auto pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
 		auto wnd = static_cast<Window*>(pcs->lpCreateParams);
-		SetWindowLongPtrW(hWnd, GWLP_USERDATA, PtrToUlong(wnd));
+		//SetWindowLongPtrW(hWnd, GWLP_USERDATA, PtrToUlong(wnd));
+		SetWindowLongPtrW(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(wnd));
 		wnd->m_hWnd = hWnd;
 		return wnd->WndProc(msg, wParam, lParam);
 	}

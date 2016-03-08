@@ -139,7 +139,18 @@ void Butterfly::InitializeRenderStates()
 	//tutaj trzeba wlaczyc mieszanie alpha. poczeytac ;/
 	D3D11_BLEND_DESC bsDesc = m_device.DefaultBlendDesc();
 	//Setup alpha blending
+	bsDesc.RenderTarget[0].BlendEnable = true;
+	bsDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	bsDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	bsDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	bsDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bsDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	bsDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	bsDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
 	m_bsAlpha = m_device.CreateBlendState(bsDesc);
+
+	m_context->OMSetBlendState(m_bsAlpha.get(), 0, 0xffffffff);
 }
 
 void Butterfly::InitializeCamera()

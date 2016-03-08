@@ -135,6 +135,8 @@ void Butterfly::InitializeRenderStates()
 	rsDesc.FrontCounterClockwise = true;
 	m_rsCounterClockwise = m_device.CreateRasterizerState(rsDesc);
 
+
+	//tutaj trzeba wlaczyc mieszanie alpha. poczeytac ;/
 	D3D11_BLEND_DESC bsDesc = m_device.DefaultBlendDesc();
 	//Setup alpha blending
 	m_bsAlpha = m_device.CreateBlendState(bsDesc);
